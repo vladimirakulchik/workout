@@ -11,11 +11,15 @@
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.0",
+        "intervention/image": "^4.3",
+        "intervention/image-laravel": "^4.1",
+        "lab404/laravel-impersonate": "^1.7",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "spatie/laravel-activitylog": "^4.12"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
