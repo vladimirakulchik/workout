@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -25,15 +27,49 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => UserRole::Player,
+            'status' => UserStatus::Active,
+            'phone' => null,
+            'photo_path' => null,
+            'must_change_password' => false,
+            'last_login_at' => null,
             'remember_token' => Str::random(10),
-            'two_factor_secret' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_confirmed_at' => null,
         ];
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => UserRole::SuperAdmin]);
+    }
+
+    public function trainer(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => UserRole::Trainer]);
+    }
+
+    public function coach(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => UserRole::Coach]);
+    }
+
+    public function player(): static
+    {
+        return $this->state(fn (array $attributes) => ['role' => UserRole::Player]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => ['status' => UserStatus::Inactive]);
+    }
+
+    public function deleted(): static
+    {
+        return $this->state(fn (array $attributes) => ['status' => UserStatus::Deleted]);
     }
 
     /**
@@ -43,18 +79,6 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
-        ]);
-    }
-
-    /**
-     * Indicate that the model has two-factor authentication configured.
-     */
-    public function withTwoFactor(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'two_factor_secret' => encrypt('secret'),
-            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
-            'two_factor_confirmed_at' => now(),
         ]);
     }
 }
