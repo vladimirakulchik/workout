@@ -2,37 +2,52 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
-use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
- * @property string $name
+ * @property string $first_name
+ * @property string $last_name
+ * @property-read string $name
  * @property string $email
  * @property Carbon|null $email_verified_at
  * @property string $password
- * @property string|null $two_factor_secret
- * @property string|null $two_factor_recovery_codes
- * @property Carbon|null $two_factor_confirmed_at
+ * @property UserRole $role
+ * @property UserStatus $status
+ * @property string|null $phone
+ * @property string|null $photo_path
+ * @property bool $must_change_password
+ * @property Carbon|null $last_login_at
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Fillable(['first_name', 'last_name', 'email', 'password', 'role', 'status', 'phone', 'photo_path', 'must_change_password', 'last_login_at'])]
+#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, PasskeyAuthenticatable;
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = ['name'];
 
     /**
      * Get the attributes that should be cast.
@@ -44,7 +59,106 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'two_factor_confirmed_at' => 'datetime',
+            'role' => UserRole::class,
+            'status' => UserStatus::class,
+            'must_change_password' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The user's full name (first + last).
+     *
+     * @return Attribute<string, never>
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::get(fn (): string => trim($this->first_name.' '.$this->last_name));
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRole::SuperAdmin;
+    }
+
+    public function isTrainer(): bool
+    {
+        return $this->role === UserRole::Trainer;
+    }
+
+    public function isCoach(): bool
+    {
+        return $this->role === UserRole::Coach;
+    }
+
+    public function isPlayer(): bool
+    {
+        return $this->role === UserRole::Player;
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     */
+    public function scopeOfRole(Builder $query, UserRole $role): void
+    {
+        $query->where('role', $role->value);
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('status', UserStatus::Active->value);
+    }
+
+    /**
+     * Match first name, last name, email or phone with a bound LIKE.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeSearch(Builder $query, ?string $term): void
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return;
+        }
+
+        $like = '%'.addcslashes($term, '\\%_').'%';
+
+        $query->where(function (Builder $query) use ($like): void {
+            $query->where('first_name', 'like', $like)
+                ->orWhere('last_name', 'like', $like)
+                ->orWhere('email', 'like', $like)
+                ->orWhere('phone', 'like', $like);
+        });
+    }
+
+    /**
+     * The player profile this login belongs to (child login). Stub until TASK-004.
+     *
+     * @return HasOne<PlayerProfile, $this>
+     */
+    public function playerProfile(): HasOne
+    {
+        return $this->hasOne(PlayerProfile::class, 'user_id');
+    }
+
+    /**
+     * Whether this login belongs to a child player profile. Stub until TASK-004.
+     */
+    public function isChildAccount(): bool
+    {
+        if (! Schema::hasTable('player_profiles')) {
+            return false;
+        }
+
+        return (bool) $this->playerProfile?->is_child;
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        return ! $this->isSuperAdmin();
     }
 }
