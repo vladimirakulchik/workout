@@ -16,8 +16,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
-use Laravel\Fortify\Contracts\PasskeyUser;
-use Laravel\Fortify\PasskeyAuthenticatable;
 
 /**
  * @property int $id
@@ -39,10 +37,10 @@ use Laravel\Fortify\PasskeyAuthenticatable;
  */
 #[Fillable(['first_name', 'last_name', 'email', 'password', 'role', 'status', 'phone', 'photo_path', 'must_change_password', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable;
+    use HasFactory, Notifiable;
 
     /**
      * @var list<string>

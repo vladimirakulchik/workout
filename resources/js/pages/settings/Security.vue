@@ -7,13 +7,9 @@ import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/security';
-import type { Props as ManagePasskeysProps } from '@/components/ManagePasskeys.vue';
-import ManagePasskeys from '@/components/ManagePasskeys.vue';
-
-// oxfmt-ignore
 type Props = {
     passwordRules: string;
-} & ManagePasskeysProps;
+};
 
 const props = defineProps<Props>();
 
@@ -103,9 +99,4 @@ defineOptions({
             </div>
         </Form>
     </div>
-
-    <ManagePasskeys
-        :canManagePasskeys="canManagePasskeys"
-        :passkeys="passkeys"
-    />
 </template>
