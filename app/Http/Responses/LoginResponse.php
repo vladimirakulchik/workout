@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
-use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\NavigationBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
 class LoginResponse implements LoginResponseContract
@@ -27,18 +26,9 @@ class LoginResponse implements LoginResponseContract
 
     /**
      * Resolve the home URL for a user's role.
-     *
-     * Role dashboards are created in TASK-005; until then they fall back to the generic dashboard.
      */
     public static function homeUrl(User $user): string
     {
-        $routeName = match ($user->role) {
-            UserRole::SuperAdmin => 'admin.dashboard',
-            UserRole::Trainer => 'trainer.dashboard',
-            UserRole::Coach => 'coach.dashboard',
-            UserRole::Player => 'player.dashboard',
-        };
-
-        return route(Route::has($routeName) ? $routeName : 'dashboard');
+        return route(NavigationBuilder::dashboardRoute($user->role));
     }
 }

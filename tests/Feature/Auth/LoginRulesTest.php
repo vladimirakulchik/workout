@@ -90,25 +90,24 @@ class LoginRulesTest extends TestCase
     }
 
     #[DataProvider('roleRedirects')]
-    public function test_users_are_redirected_after_login_by_role(string $role): void
+    public function test_users_are_redirected_after_login_by_role(string $role, string $routeName): void
     {
         $user = User::factory()->{$role}()->create();
 
-        // Role dashboards arrive in TASK-005; until then every role lands on the generic dashboard.
         $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route($routeName));
     }
 
     /**
-     * @return array<string, array{string}>
+     * @return array<string, array{string, string}>
      */
     public static function roleRedirects(): array
     {
         return [
-            'super admin' => ['superAdmin'],
-            'trainer' => ['trainer'],
-            'coach' => ['coach'],
-            'player' => ['player'],
+            'super admin' => ['superAdmin', 'admin.dashboard'],
+            'trainer' => ['trainer', 'trainer.dashboard'],
+            'coach' => ['coach', 'coach.dashboard'],
+            'player' => ['player', 'player.dashboard'],
         ];
     }
 
@@ -116,7 +115,7 @@ class LoginRulesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get(route('dashboard'))->assertOk();
+        $this->actingAs($user)->get(route('player.dashboard'))->assertOk();
 
         $user->forceFill(['status' => 'inactive'])->save();
 

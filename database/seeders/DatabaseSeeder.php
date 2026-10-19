@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
+use App\Models\CoachProfile;
+use App\Models\PlayerProfile;
+use App\Models\TrainerProfile;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -49,8 +52,16 @@ class DatabaseSeeder extends Seeder
 
     private function seedDemoUsers(): void
     {
-        User::factory()->trainer()->count(2)->create();
-        User::factory()->coach()->count(3)->create();
-        User::factory()->player()->count(5)->create();
+        $trainers = TrainerProfile::factory()->count(2)->create()->map->user;
+
+        foreach ($trainers as $index => $trainer) {
+            CoachProfile::factory()->forTrainer($trainer)->count($index === 0 ? 2 : 1)->create();
+        }
+
+        PlayerProfile::factory()->count(4)->create();
+
+        $parent = User::factory()->player()->create();
+        PlayerProfile::factory()->self($parent)->create();
+        PlayerProfile::factory()->child($parent)->count(2)->create();
     }
 }

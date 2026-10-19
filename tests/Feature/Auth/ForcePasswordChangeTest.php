@@ -33,7 +33,7 @@ class ForcePasswordChangeTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get(route('password.force'))->assertRedirect(route('dashboard'));
+        $this->actingAs($user)->get(route('password.force'))->assertRedirect(route('player.dashboard'));
     }
 
     public function test_password_can_be_changed_and_flag_is_cleared(): void
@@ -44,13 +44,13 @@ class ForcePasswordChangeTest extends TestCase
             'current_password' => 'password',
             'password' => 'new-password',
             'password_confirmation' => 'new-password',
-        ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+        ])->assertSessionHasNoErrors()->assertRedirect(route('player.dashboard'));
 
         $user->refresh();
 
         $this->assertFalse($user->must_change_password);
         $this->assertTrue(Hash::check('new-password', $user->password));
-        $this->actingAs($user)->get(route('dashboard'))->assertOk();
+        $this->actingAs($user)->get(route('dashboard'))->assertRedirect(route('player.dashboard'));
     }
 
     public function test_wrong_current_password_keeps_the_flag(): void

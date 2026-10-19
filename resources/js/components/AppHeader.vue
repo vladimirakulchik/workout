@@ -249,8 +249,8 @@ const rightNavItems: NavItem[] = [
                                     class="size-8 overflow-hidden rounded-full"
                                 >
                                     <AvatarImage
-                                        v-if="auth.user.avatar"
-                                        :src="auth.user.avatar"
+                                        v-if="auth.user.photo_url"
+                                        :src="auth.user.photo_url"
                                         :alt="auth.user.name"
                                     />
                                     <AvatarFallback
