@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $parent_user_id
  * @property string $first_name
  * @property string $last_name
- * @property Carbon $birth_date
+ * @property Carbon|null $birth_date
  * @property string $gender
  * @property string|null $skill_level
  * @property string|null $school
@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property string $emergency_contact_name
  * @property string|null $emergency_contact_phone
  * @property bool $allow_token_spending
- * @property-read int $age
+ * @property-read int|null $age
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -53,11 +53,11 @@ class PlayerProfile extends Model
     /**
      * Age in whole years.
      *
-     * @return Attribute<int, never>
+     * @return Attribute<int|null, never>
      */
     protected function age(): Attribute
     {
-        return Attribute::get(fn (): int => $this->birth_date->age);
+        return Attribute::get(fn (): ?int => $this->birth_date?->age);
     }
 
     /**
