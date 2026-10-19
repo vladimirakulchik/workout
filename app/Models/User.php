@@ -90,6 +90,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Name to show in lists and history; anonymized users read "Deleted User".
+     */
+    public function displayName(): string
+    {
+        return $this->status === UserStatus::Deleted ? 'Deleted User' : $this->name;
+    }
+
+    /**
      * Public URL of the profile photo, or the default avatar when none is set.
      */
     public function photoUrl(): string

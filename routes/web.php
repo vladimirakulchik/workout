@@ -26,6 +26,9 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::post('users', [Admin\UserController::class, 'store'])->name('users.store');
         Route::get('users/{user}/edit', [Admin\UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [Admin\UserController::class, 'update'])->name('users.update');
+        Route::post('users/{user}/deactivate', [Admin\UserController::class, 'deactivate'])->name('users.deactivate');
+        Route::post('users/{user}/reactivate', [Admin\UserController::class, 'reactivate'])->name('users.reactivate');
+        Route::delete('users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
     });
 
     Route::middleware('role:trainer')->prefix('trainer')->name('trainer.')->group(function () {

@@ -45,7 +45,12 @@ type ManagedUserRow = {
     status: string;
     status_label: string;
     created_at: string | null;
+    can_deactivate: boolean;
+    can_reactivate: boolean;
+    can_delete: boolean;
 };
+
+type LifecycleAction = 'deactivate' | 'reactivate' | 'delete';
 
 type PaginationLink = { url: string | null; label: string; active: boolean };
 
@@ -80,6 +85,64 @@ const ALL = 'all';
 
 const search = ref(props.filters.search);
 const createOpen = ref(false);
+const pendingAction = ref<{ action: LifecycleAction; user: ManagedUserRow } | null>(null);
+const confirmOpen = ref(false);
+const reason = ref('');
+const processing = ref(false);
+const actionError = ref('');
+
+const warnings: Record<LifecycleAction, { title: string; description: string; confirm: string }> = {
+    deactivate: {
+        title: 'Deactivate user',
+        description:
+            'The user will be logged out immediately and will not be able to log in until reactivated. Their data is kept.',
+        confirm: 'Deactivate',
+    },
+    reactivate: {
+        title: 'Reactivate user',
+        description: 'The user will be able to log in again with their existing password.',
+        confirm: 'Reactivate',
+    },
+    delete: {
+        title: 'Delete user',
+        description:
+            'This permanently anonymizes the user: name, email, phone, photo and profile details are erased and cannot be restored. History records are kept under "Deleted User". This action cannot be undone.',
+        confirm: 'Delete permanently',
+    },
+};
+
+function openAction(action: LifecycleAction, user: ManagedUserRow): void {
+    pendingAction.value = { action, user };
+    reason.value = '';
+    actionError.value = '';
+    confirmOpen.value = true;
+}
+
+function confirmAction(): void {
+    if (pendingAction.value === null) {
+        return;
+    }
+
+    const { action, user } = pendingAction.value;
+    const options = {
+        preserveScroll: true,
+        onStart: () => (processing.value = true),
+        onFinish: () => (processing.value = false),
+        onSuccess: () => (confirmOpen.value = false),
+        onError: (errors: Record<string, string>) => {
+            actionError.value = errors.reason ?? errors.user ?? '';
+        },
+    };
+
+    if (action === 'delete') {
+        router.delete(UserController.destroy.url(user.id), {
+            ...options,
+            data: { reason: reason.value },
+        });
+    } else {
+        router.post(UserController[action].url(user.id), {}, options);
+    }
+}
 
 function visit(overrides: Partial<Props['filters']>): void {
     const query = { ...props.filters, ...overrides };
@@ -363,6 +426,8 @@ const columns = [
                         v-for="user in users.data"
                         :key="user.id"
                         class="border-b last:border-0"
+                        :class="{ 'opacity-60': user.status !== 'active' }"
+                        :data-status="user.status"
                     >
                         <td class="px-4 py-3 font-medium">{{ user.name }}</td>
                         <td class="px-4 py-3">{{ user.email }}</td>
@@ -385,12 +450,34 @@ const columns = [
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem as-child>
+                                    <DropdownMenuItem
+                                        v-if="user.status !== 'deleted'"
+                                        as-child
+                                    >
                                         <Link
                                             :href="UserController.edit.url(user.id)"
                                         >
                                             Edit
                                         </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        v-if="user.can_deactivate"
+                                        @select="openAction('deactivate', user)"
+                                    >
+                                        Deactivate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        v-if="user.can_reactivate"
+                                        @select="openAction('reactivate', user)"
+                                    >
+                                        Reactivate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        v-if="user.can_delete"
+                                        class="text-destructive focus:text-destructive"
+                                        @select="openAction('delete', user)"
+                                    >
+                                        Delete
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -433,5 +520,60 @@ const columns = [
                 </li>
             </ul>
         </nav>
+
+        <Dialog v-model:open="confirmOpen">
+            <DialogContent v-if="pendingAction">
+                <DialogHeader>
+                    <DialogTitle>
+                        {{ warnings[pendingAction.action].title }}:
+                        {{ pendingAction.user.name }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ warnings[pendingAction.action].description }}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form class="grid gap-4" @submit.prevent="confirmAction">
+                    <div
+                        v-if="pendingAction.action === 'delete'"
+                        class="grid gap-2"
+                    >
+                        <Label for="delete-reason">Reason for deletion</Label>
+                        <textarea
+                            id="delete-reason"
+                            v-model="reason"
+                            name="reason"
+                            rows="3"
+                            required
+                            maxlength="2000"
+                            class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        />
+                    </div>
+                    <InputError :message="actionError" />
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            @click="confirmOpen = false"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            :variant="
+                                pendingAction.action === 'reactivate'
+                                    ? 'default'
+                                    : 'destructive'
+                            "
+                            :disabled="processing"
+                            data-test="confirm-lifecycle-action"
+                        >
+                            {{ warnings[pendingAction.action].confirm }}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

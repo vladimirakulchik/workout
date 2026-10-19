@@ -5,16 +5,21 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateTrainer;
+use App\Actions\Admin\DeactivateUser;
+use App\Actions\Admin\DeleteUser;
+use App\Actions\Admin\ReactivateUser;
 use App\Actions\Profile\UpdateUserProfile;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\DeleteUserRequest;
 use App\Http\Requests\Admin\IndexUsersRequest;
 use App\Http\Requests\Admin\StoreTrainerRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -50,7 +55,7 @@ class UserController extends Controller
             ->orderBy('id')
             ->paginate(self::PER_PAGE)
             ->withQueryString()
-            ->through(fn (User $user): array => $this->listRow($user));
+            ->through(fn (User $user): array => $this->listRow($user, $request->user()));
 
         return Inertia::render('admin/Users/Index', [
             'users' => $users,
@@ -111,14 +116,48 @@ class UserController extends Controller
         return to_route('admin.users.edit', $user);
     }
 
+    public function deactivate(Request $request, User $user, DeactivateUser $deactivateUser): RedirectResponse
+    {
+        Gate::authorize('deactivate', $user);
+
+        $deactivateUser->handle($request->user(), $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('User deactivated.')]);
+
+        return back();
+    }
+
+    public function reactivate(Request $request, User $user, ReactivateUser $reactivateUser): RedirectResponse
+    {
+        Gate::authorize('reactivate', $user);
+
+        $reactivateUser->handle($request->user(), $user);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('User reactivated.')]);
+
+        return back();
+    }
+
+    public function destroy(DeleteUserRequest $request, User $user, DeleteUser $deleteUser): RedirectResponse
+    {
+        $deleteUser->handle($request->user(), $user, $request->validated('reason'));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('User deleted and anonymized.')]);
+
+        return back();
+    }
+
     /**
      * @return array<string, mixed>
      */
-    private function listRow(User $user): array
+    private function listRow(User $user, User $viewer): array
     {
         return [
             'id' => $user->id,
-            'name' => $user->name,
+            'name' => $user->displayName(),
+            'can_deactivate' => $viewer->can('deactivate', $user),
+            'can_reactivate' => $viewer->can('reactivate', $user),
+            'can_delete' => $viewer->can('delete', $user),
             'email' => $user->email,
             'phone' => $user->phone,
             'role' => $user->role->value,
