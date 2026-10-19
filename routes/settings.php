@@ -13,8 +13,6 @@ Route::middleware(['auth', 'password.change'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
-    Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     Route::get('settings/security', [SecurityController::class, 'edit'])
         ->middleware(RequirePassword::class)
         ->name('security.edit');

@@ -7,7 +7,7 @@ export type User = {
     name: string;
     email: string;
     role: UserRole;
-    photo_url: string | null;
+    photo_url: string;
     impersonating: boolean;
     [key: string]: unknown;
 };

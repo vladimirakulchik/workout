@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -73,6 +74,16 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function name(): Attribute
     {
         return Attribute::get(fn (): string => trim($this->first_name.' '.$this->last_name));
+    }
+
+    /**
+     * Public URL of the profile photo, or the default avatar when none is set.
+     */
+    public function photoUrl(): string
+    {
+        return $this->photo_path !== null
+            ? Storage::disk('public')->url($this->photo_path)
+            : asset('images/default-avatar.svg');
     }
 
     public function isSuperAdmin(): bool

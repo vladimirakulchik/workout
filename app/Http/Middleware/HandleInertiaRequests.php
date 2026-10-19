@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Models\User;
 use App\Support\NavigationBuilder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -53,7 +52,7 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * @return array{id: int, first_name: string, last_name: string, name: string, email: string, role: string, photo_url: string|null, impersonating: bool}
+     * @return array{id: int, first_name: string, last_name: string, name: string, email: string, role: string, photo_url: string, impersonating: bool}
      */
     private function userProps(User $user, Request $request): array
     {
@@ -64,7 +63,7 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role->value,
-            'photo_url' => $user->photo_path ? Storage::url($user->photo_path) : null,
+            'photo_url' => $user->photoUrl(),
             'impersonating' => $request->session()->has('impersonator_id'),
         ];
     }
