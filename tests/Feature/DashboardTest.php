@@ -28,6 +28,14 @@ class DashboardTest extends TestCase
         ];
     }
 
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
+    public static function roleRoutes(): array
+    {
+        return array_map(fn (array $role): array => [$role[0], $role[1]], self::roles());
+    }
+
     public function test_guests_are_redirected_to_the_login_page(): void
     {
         $this->get(route('dashboard'))->assertRedirect(route('login'));
@@ -37,7 +45,7 @@ class DashboardTest extends TestCase
         }
     }
 
-    #[DataProvider('roles')]
+    #[DataProvider('roleRoutes')]
     public function test_dashboard_route_redirects_to_the_role_dashboard(string $state, string $routeName): void
     {
         $user = User::factory()->{$state}()->create();
@@ -61,7 +69,7 @@ class DashboardTest extends TestCase
             );
     }
 
-    #[DataProvider('roles')]
+    #[DataProvider('roleRoutes')]
     public function test_roles_get_403_on_other_role_dashboards(string $state, string $ownRoute): void
     {
         $user = User::factory()->{$state}()->create();
