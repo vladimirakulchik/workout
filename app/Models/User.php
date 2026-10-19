@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * @property int $id
@@ -134,25 +135,67 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The player profile this login belongs to (child login). Stub until TASK-004.
+     * @return HasOne<TrainerProfile, $this>
+     */
+    public function trainerProfile(): HasOne
+    {
+        return $this->hasOne(TrainerProfile::class);
+    }
+
+    /**
+     * @return HasOne<CoachProfile, $this>
+     */
+    public function coachProfile(): HasOne
+    {
+        return $this->hasOne(CoachProfile::class);
+    }
+
+    /**
+     * Player profiles this login owns (self profile, or the child profile it logs in as).
+     *
+     * @return HasMany<PlayerProfile, $this>
+     */
+    public function playerProfiles(): HasMany
+    {
+        return $this->hasMany(PlayerProfile::class, 'user_id');
+    }
+
+    /**
+     * Child profiles managed by this user as parent.
+     *
+     * @return HasMany<PlayerProfile, $this>
+     */
+    public function childProfiles(): HasMany
+    {
+        return $this->hasMany(PlayerProfile::class, 'parent_user_id');
+    }
+
+    /**
+     * The player profile this login belongs to.
      *
      * @return HasOne<PlayerProfile, $this>
      */
-    public function playerProfile(): HasOne
+    public function selfPlayerProfile(): HasOne
     {
         return $this->hasOne(PlayerProfile::class, 'user_id');
     }
 
     /**
-     * Whether this login belongs to a child player profile. Stub until TASK-004.
+     * Coach logins attached to this trainer.
+     *
+     * @return HasManyThrough<User, CoachProfile, $this>
+     */
+    public function coaches(): HasManyThrough
+    {
+        return $this->hasManyThrough(User::class, CoachProfile::class, 'trainer_id', 'id', 'id', 'user_id');
+    }
+
+    /**
+     * Whether this login belongs to a child player profile.
      */
     public function isChildAccount(): bool
     {
-        if (! Schema::hasTable('player_profiles')) {
-            return false;
-        }
-
-        return (bool) $this->playerProfile?->is_child;
+        return (bool) $this->selfPlayerProfile?->is_child;
     }
 
     public function canBeImpersonated(): bool
