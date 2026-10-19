@@ -52,6 +52,8 @@ class DatabaseSeeder extends Seeder
 
     private function seedDemoUsers(): void
     {
+        User::factory()->superAdmin()->count(5)->create();
+
         $trainers = TrainerProfile::factory()->count(2)->create()->map->user;
 
         foreach ($trainers as $index => $trainer) {
