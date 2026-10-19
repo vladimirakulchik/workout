@@ -21,6 +21,11 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
 
     Route::middleware('role:super_admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('dashboard', Admin\DashboardController::class)->name('dashboard');
+
+        Route::get('users', [Admin\UserController::class, 'index'])->name('users.index');
+        Route::post('users', [Admin\UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}/edit', [Admin\UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}', [Admin\UserController::class, 'update'])->name('users.update');
     });
 
     Route::middleware('role:trainer')->prefix('trainer')->name('trainer.')->group(function () {
