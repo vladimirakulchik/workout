@@ -7,6 +7,7 @@ namespace App\Actions\Admin;
 use App\Enums\UserStatus;
 use App\Models\CoachProfile;
 use App\Models\PlayerProfile;
+use App\Models\ShareLink;
 use App\Models\TrainerProfile;
 use App\Models\User;
 use App\Models\UserDeletionLog;
@@ -62,7 +63,11 @@ class DeleteUser
 
             DB::table('sessions')->where('user_id', $user->id)->delete();
 
-            // Pending ShareLinks are deactivated here once the ShareLink table exists.
+            ShareLink::query()
+                ->withoutGlobalScopes()
+                ->where('is_active', true)
+                ->where(fn ($query) => $query->where('trainer_id', $user->id)->orWhere('created_by', $user->id))
+                ->update(['is_active' => false]);
 
             activity()
                 ->performedOn($user)

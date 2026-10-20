@@ -7,6 +7,7 @@ namespace Tests\Feature\Admin;
 use App\Enums\UserStatus;
 use App\Models\CoachProfile;
 use App\Models\PlayerProfile;
+use App\Models\ShareLink;
 use App\Models\TrainerProfile;
 use App\Models\User;
 use App\Models\UserDeletionLog;
@@ -127,6 +128,22 @@ class UserLifecycleTest extends TestCase
         $this->assertSame('Deleted', $profile->first_name);
         $this->assertSame($player->id, $profile->user_id);
         $this->assertDatabaseHas('users', ['id' => $player->id]);
+    }
+
+    public function test_delete_deactivates_the_trainers_share_links_only(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $trainer = User::factory()->trainer()->create();
+        $otherTrainer = User::factory()->trainer()->create();
+        $own = ShareLink::factory()->forTrainer($trainer)->create();
+        $ownCoach = ShareLink::factory()->forTrainer($trainer)->coach()->create();
+        $other = ShareLink::factory()->forTrainer($otherTrainer)->create();
+
+        $this->actingAs($admin)->delete(route('admin.users.destroy', $trainer), ['reason' => 'x']);
+
+        $this->assertFalse($own->fresh()->is_active);
+        $this->assertFalse($ownCoach->fresh()->is_active);
+        $this->assertTrue($other->fresh()->is_active);
     }
 
     public function test_delete_requires_a_reason(): void
