@@ -152,7 +152,7 @@ class ShareLinkTest extends TestCase
         $this->get(route('join.show', $link->code))
             ->assertOk()
             ->assertSessionHas('join_code', $link->code)
-            ->assertInertia(fn (Assert $page) => $page->component('join/Show')->where('trainerName', $this->trainer->name));
+            ->assertInertia(fn (Assert $page) => $page->component('auth/JoinRegister')->where('trainerName', $this->trainer->name));
     }
 
     public function test_unusable_links_show_friendly_messages(): void
@@ -182,6 +182,8 @@ class ShareLinkTest extends TestCase
     {
         $link = ShareLink::factory()->forTrainer(User::factory()->trainer()->create())->create();
 
-        $this->actingAs($this->trainer)->get(route('join.show', $link->code))->assertOk();
+        $this->actingAs($this->trainer)->get(route('join.show', $link->code))
+            ->assertForbidden()
+            ->assertInertia(fn (Assert $page) => $page->component('join/Invalid')->has('message'));
     }
 }

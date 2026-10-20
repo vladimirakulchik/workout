@@ -14,6 +14,7 @@ void createInertiaApp({
                 return null;
             case name.startsWith('auth/'):
             case name.startsWith('join/'):
+            case name === 'player/JoinSelect':
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];

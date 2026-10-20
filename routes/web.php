@@ -13,6 +13,13 @@ Route::inertia('/', 'Welcome')->name('home');
 
 Route::get('join/{code}', [JoinController::class, 'show'])->name('join.show');
 
+Route::post('join/{code}', [JoinController::class, 'register'])->middleware('guest')->name('join.register');
+
+Route::middleware(['auth', 'verified', 'role:player'])->group(function () {
+    Route::get('join/{code}/select', [JoinController::class, 'select'])->name('player.join.select');
+    Route::post('join/{code}/select', [JoinController::class, 'associate'])->name('player.join.associate');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('password/force', [ForcePasswordChangeController::class, 'edit'])->name('password.force');
     Route::put('password/force', [ForcePasswordChangeController::class, 'update'])->name('password.force.update');

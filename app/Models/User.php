@@ -214,6 +214,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Association rows where this user is the trainer.
+     *
+     * @return HasMany<TrainerPlayerAssociation, $this>
+     */
+    public function trainerAssociations(): HasMany
+    {
+        return $this->hasMany(TrainerPlayerAssociation::class, 'trainer_id');
+    }
+
+    /**
      * Coach logins attached to this trainer.
      *
      * @return HasManyThrough<User, CoachProfile, $this>
