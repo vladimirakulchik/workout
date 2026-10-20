@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Lab404\Impersonate\Services\ImpersonateManager;
+use Spatie\Activitylog\Models\Activity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,21 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->tagImpersonatedActivity();
+    }
+
+    /**
+     * Stamp every activity log entry written during an impersonation with the real admin's id.
+     */
+    protected function tagImpersonatedActivity(): void
+    {
+        Activity::creating(function (Activity $activity): void {
+            $impersonatorId = app(ImpersonateManager::class)->getImpersonatorId();
+
+            if ($impersonatorId !== null) {
+                $activity->properties = $activity->properties->put('impersonator_id', $impersonatorId);
+            }
+        });
     }
 
     /**

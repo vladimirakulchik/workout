@@ -18,6 +18,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Lab404\Impersonate\Models\Impersonate;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -44,7 +45,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, LogsActivity, Notifiable;
+    use HasFactory, Impersonate, LogsActivity, Notifiable;
 
     /**
      * @var list<string>
@@ -230,8 +231,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return (bool) $this->selfPlayerProfile?->is_child;
     }
 
+    public function canImpersonate(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
     public function canBeImpersonated(): bool
     {
-        return ! $this->isSuperAdmin();
+        return ! $this->isSuperAdmin() && $this->status === UserStatus::Active;
     }
 }

@@ -3,6 +3,7 @@ import { Form, Head, Link, router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import { ArrowDown, ArrowUp, ArrowUpDown, EllipsisVertical, Plus } from '@lucide/vue';
 import { ref, watch } from 'vue';
+import ImpersonationController from '@/actions/App/Http/Controllers/Admin/ImpersonationController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,7 @@ type ManagedUserRow = {
     can_deactivate: boolean;
     can_reactivate: boolean;
     can_delete: boolean;
+    can_impersonate: boolean;
 };
 
 type LifecycleAction = 'deactivate' | 'reactivate' | 'delete';
@@ -110,6 +112,25 @@ const warnings: Record<LifecycleAction, { title: string; description: string; co
         confirm: 'Delete permanently',
     },
 };
+
+const impersonateTarget = ref<ManagedUserRow | null>(null);
+const impersonateOpen = ref(false);
+
+function openImpersonate(user: ManagedUserRow): void {
+    impersonateTarget.value = user;
+    impersonateOpen.value = true;
+}
+
+function confirmImpersonate(): void {
+    if (impersonateTarget.value === null) {
+        return;
+    }
+
+    router.post(ImpersonationController.take.url(impersonateTarget.value.id), {}, {
+        onStart: () => (processing.value = true),
+        onFinish: () => (processing.value = false),
+    });
+}
 
 function openAction(action: LifecycleAction, user: ManagedUserRow): void {
     pendingAction.value = { action, user };
@@ -461,6 +482,12 @@ const columns = [
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
+                                        v-if="user.can_impersonate"
+                                        @select="openImpersonate(user)"
+                                    >
+                                        View as user
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
                                         v-if="user.can_deactivate"
                                         @select="openAction('deactivate', user)"
                                     >
@@ -520,6 +547,38 @@ const columns = [
                 </li>
             </ul>
         </nav>
+
+        <Dialog v-model:open="impersonateOpen">
+            <DialogContent v-if="impersonateTarget">
+                <DialogHeader>
+                    <DialogTitle>
+                        View platform as {{ impersonateTarget.name }}
+                        ({{ impersonateTarget.role_label }})?
+                    </DialogTitle>
+                    <DialogDescription>
+                        You will see the platform exactly as this user does. The
+                        session ends automatically after 1 hour and is logged.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="impersonateOpen = false"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        :disabled="processing"
+                        data-test="confirm-impersonate"
+                        @click="confirmImpersonate"
+                    >
+                        View as user
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <Dialog v-model:open="confirmOpen">
             <DialogContent v-if="pendingAction">

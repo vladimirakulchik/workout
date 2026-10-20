@@ -15,6 +15,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('password/force', [ForcePasswordChangeController::class, 'update'])->name('password.force.update');
 });
 
+Route::delete('impersonate/leave', [Admin\ImpersonationController::class, 'leave'])
+    ->middleware('auth')
+    ->name('impersonate.leave');
+
 Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
     Route::get('dashboard', fn () => redirect()->route(NavigationBuilder::dashboardRoute(auth()->user()->role)))
         ->name('dashboard');
@@ -29,6 +33,9 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::post('users/{user}/deactivate', [Admin\UserController::class, 'deactivate'])->name('users.deactivate');
         Route::post('users/{user}/reactivate', [Admin\UserController::class, 'reactivate'])->name('users.reactivate');
         Route::delete('users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('users/{user}/impersonate', [Admin\ImpersonationController::class, 'take'])->name('users.impersonate');
+
+        Route::get('impersonation-history', Admin\ImpersonationHistoryController::class)->name('impersonation-history');
     });
 
     Route::middleware('role:trainer')->prefix('trainer')->name('trainer.')->group(function () {

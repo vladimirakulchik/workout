@@ -20,6 +20,7 @@ class NavigationBuilder
         'super_admin' => [
             ['Dashboard', 'admin.dashboard', 'LayoutGrid'],
             ['Users', 'admin.users.index', 'Users'],
+            ['Impersonation History', 'admin.impersonation-history', 'History'],
         ],
         'trainer' => [
             ['Dashboard', 'trainer.dashboard', 'LayoutGrid'],
