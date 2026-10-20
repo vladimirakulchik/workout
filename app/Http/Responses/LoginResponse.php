@@ -21,6 +21,12 @@ class LoginResponse implements LoginResponseContract
             return new JsonResponse(['two_factor' => false]);
         }
 
+        $joinCode = $request->session()->get('join_code');
+
+        if ($joinCode !== null && $request->user()?->isPlayer()) {
+            return redirect()->route('join.show', ['code' => $joinCode]);
+        }
+
         return redirect()->intended(self::homeUrl($request->user()));
     }
 

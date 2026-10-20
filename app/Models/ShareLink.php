@@ -73,6 +73,14 @@ class ShareLink extends Model
     }
 
     /**
+     * Look a link up by its public code regardless of the signed-in user's tenant, with its trainer loaded.
+     */
+    public static function findByCode(string $code): ?self
+    {
+        return static::query()->withoutGlobalScopes()->with('trainer')->where('code', $code)->first();
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function trainer(): BelongsTo
