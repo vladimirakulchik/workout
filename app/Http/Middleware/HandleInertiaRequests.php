@@ -44,6 +44,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $user instanceof User ? $this->userProps($user, $request) : null,
+                'impersonating' => $user instanceof User && $user->isImpersonated()
+                    ? ['name' => $user->name, 'role_label' => $user->role->label()]
+                    : null,
             ],
             'navigation' => $user instanceof User ? (new NavigationBuilder)->for($user) : [],
             'branding' => null,
@@ -64,7 +67,7 @@ class HandleInertiaRequests extends Middleware
             'email' => $user->email,
             'role' => $user->role->value,
             'photo_url' => $user->photoUrl(),
-            'impersonating' => $request->session()->has('impersonator_id'),
+            'impersonating' => $user->isImpersonated(),
         ];
     }
 }

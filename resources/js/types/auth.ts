@@ -12,6 +12,12 @@ export type User = {
     [key: string]: unknown;
 };
 
+export type Impersonating = {
+    name: string;
+    role_label: string;
+};
+
 export type Auth = {
     user: User;
+    impersonating: Impersonating | null;
 };

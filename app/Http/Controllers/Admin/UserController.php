@@ -158,6 +158,7 @@ class UserController extends Controller
             'can_deactivate' => $viewer->can('deactivate', $user),
             'can_reactivate' => $viewer->can('reactivate', $user),
             'can_delete' => $viewer->can('delete', $user),
+            'can_impersonate' => $viewer->can('impersonate', $user),
             'email' => $user->email,
             'phone' => $user->phone,
             'role' => $user->role->value,
