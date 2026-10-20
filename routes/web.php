@@ -3,12 +3,15 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\Coach;
+use App\Http\Controllers\JoinController;
 use App\Http\Controllers\Player;
 use App\Http\Controllers\Trainer;
 use App\Support\NavigationBuilder;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
+
+Route::get('join/{code}', [JoinController::class, 'show'])->name('join.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('password/force', [ForcePasswordChangeController::class, 'edit'])->name('password.force');
@@ -40,6 +43,11 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
 
     Route::middleware('role:trainer')->prefix('trainer')->name('trainer.')->group(function () {
         Route::get('dashboard', Trainer\DashboardController::class)->name('dashboard');
+
+        Route::get('share-links', [Trainer\ShareLinkController::class, 'index'])->name('share-links.index');
+        Route::post('share-links', [Trainer\ShareLinkController::class, 'store'])->name('share-links.store');
+        Route::post('share-links/regenerate', [Trainer\ShareLinkController::class, 'regenerate'])->name('share-links.regenerate');
+        Route::delete('share-links/{shareLink}', [Trainer\ShareLinkController::class, 'deactivate'])->name('share-links.deactivate');
     });
 
     Route::middleware('role:coach')->prefix('coach')->name('coach.')->group(function () {
