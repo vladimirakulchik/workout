@@ -2,6 +2,7 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import AvailabilityController from '@/actions/App/Http/Controllers/Coach/AvailabilityController';
 import AvailabilityGrid from '@/components/AvailabilityGrid.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { edit } from '@/routes/coach/availability';
@@ -9,6 +10,7 @@ import type { AvailabilityRange } from '@/types';
 
 const props = defineProps<{
     ranges: AvailabilityRange[];
+    isPublic: boolean;
 }>();
 
 defineOptions({
@@ -34,6 +36,10 @@ function submit(): void {
             <h1 class="text-2xl font-semibold">My Times</h1>
             <p class="text-sm text-muted-foreground">
                 Choose the days and hours you can coach. Trainers see these when planning sessions.
+            </p>
+            <p class="mt-2 text-sm text-muted-foreground" data-test="public-status">
+                Your coach profile is
+                <Badge :variant="isPublic ? 'default' : 'secondary'">{{ isPublic ? 'Public' : 'Private' }}</Badge>
             </p>
         </div>
 

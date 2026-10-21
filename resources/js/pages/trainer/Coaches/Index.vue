@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, router } from '@inertiajs/vue3';
+import { Form, Head, Link, router } from '@inertiajs/vue3';
 import { Plus } from '@lucide/vue';
 import { ref } from 'vue';
 import CoachController from '@/actions/App/Http/Controllers/Trainer/CoachController';
@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { index } from '@/routes/trainer/coaches';
+import { index, show } from '@/routes/trainer/coaches';
 
 type CoachRow = {
     id: number;
@@ -149,7 +149,9 @@ function formatDate(value: string | null): string {
                         </tr>
                         <tr v-for="coach in coaches" :key="coach.id" class="border-b last:border-0" data-test="coach-row">
                             <td class="px-4 py-3">
-                                <div class="font-medium">{{ coach.name }}</div>
+                                <Link :href="show(coach.id)" class="font-medium underline-offset-4 hover:underline" data-test="coach-link">
+                                    {{ coach.name }}
+                                </Link>
                                 <div class="text-muted-foreground">{{ coach.email }}</div>
                             </td>
                             <td class="px-4 py-3">{{ formatDate(coach.joined_at) }}</td>
