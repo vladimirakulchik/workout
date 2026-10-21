@@ -15,7 +15,7 @@ Route::get('join/{code}', [JoinController::class, 'show'])->name('join.show');
 
 Route::post('join/{code}', [JoinController::class, 'register'])->middleware('guest')->name('join.register');
 
-Route::middleware(['auth', 'verified', 'role:player'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:player', 'child.restricted'])->group(function () {
     Route::get('join/{code}/select', [JoinController::class, 'select'])->name('player.join.select');
     Route::post('join/{code}/select', [JoinController::class, 'associate'])->name('player.join.associate');
 });
@@ -64,12 +64,14 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
     Route::middleware(['role:player', 'player.context'])->prefix('player')->name('player.')->group(function () {
         Route::get('dashboard', Player\DashboardController::class)->name('dashboard');
 
-        Route::resource('family', Player\ChildProfileController::class)
-            ->parameters(['family' => 'childProfile'])
-            ->except('show');
+        Route::middleware('child.restricted')->group(function () {
+            Route::resource('family', Player\ChildProfileController::class)
+                ->parameters(['family' => 'childProfile'])
+                ->except('show');
 
-        Route::post('family/{childProfile}/trainers', [Player\ChildTrainerController::class, 'store'])->name('family.trainers.store');
-        Route::delete('family/{childProfile}/trainers/{trainer}', [Player\ChildTrainerController::class, 'destroy'])->name('family.trainers.destroy');
+            Route::post('family/{childProfile}/trainers', [Player\ChildTrainerController::class, 'store'])->name('family.trainers.store');
+            Route::delete('family/{childProfile}/trainers/{trainer}', [Player\ChildTrainerController::class, 'destroy'])->name('family.trainers.destroy');
+        });
 
         Route::post('context', [Player\ContextController::class, 'update'])->name('context.update');
     });

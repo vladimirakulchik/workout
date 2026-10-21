@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\ForcePasswordChange;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ImpersonationTimeout;
+use App\Http\Middleware\RestrictChildAccount;
 use App\Http\Middleware\SetPlayerContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureRole::class,
             'password.change' => ForcePasswordChange::class,
             'player.context' => SetPlayerContext::class,
+            'child.restricted' => RestrictChildAccount::class,
         ]);
 
         $middleware->web(append: [

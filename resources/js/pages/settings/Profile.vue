@@ -37,6 +37,7 @@ type Props = {
         email_verified: boolean;
     };
     roleProfile: RoleProfile | null;
+    restricted: boolean;
 };
 
 const props = defineProps<Props>();
@@ -120,6 +121,7 @@ const textareaClass =
                             id="first_name"
                             name="first_name"
                             :default-value="user.first_name"
+                            :readonly="restricted"
                             required
                             autocomplete="given-name"
                         />
@@ -132,6 +134,7 @@ const textareaClass =
                             id="last_name"
                             name="last_name"
                             :default-value="user.last_name"
+                            :readonly="restricted"
                             required
                             autocomplete="family-name"
                         />
@@ -145,6 +148,7 @@ const textareaClass =
                             type="tel"
                             name="phone"
                             :default-value="profile.phone ?? ''"
+                            :readonly="restricted"
                             autocomplete="tel"
                             placeholder="+15551234567"
                         />
@@ -208,7 +212,7 @@ const textareaClass =
             </section>
 
             <section
-                v-if="role === 'player' && roleProfile"
+                v-if="role === 'player' && roleProfile && !restricted"
                 class="space-y-6"
                 aria-labelledby="player-heading"
             >

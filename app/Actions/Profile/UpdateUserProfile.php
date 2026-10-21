@@ -10,6 +10,7 @@ use App\Models\TrainerProfile;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class UpdateUserProfile
 {
@@ -23,6 +24,14 @@ class UpdateUserProfile
     public function handle(User $user, array $validated, ?UploadedFile $photo = null): void
     {
         DB::transaction(function () use ($user, $validated, $photo): void {
+            if (Gate::forUser($user)->allows('child.restricted')) {
+                if ($photo !== null) {
+                    $this->storePhoto->handle($user, $photo);
+                }
+
+                return;
+            }
+
             $user->fill([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],

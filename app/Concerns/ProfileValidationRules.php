@@ -5,6 +5,7 @@ namespace App\Concerns;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 
 trait ProfileValidationRules
@@ -16,6 +17,10 @@ trait ProfileValidationRules
      */
     protected function profileRules(User $user): array
     {
+        if (Gate::forUser($user)->allows('child.restricted')) {
+            return ['photo' => $this->photoRules()];
+        }
+
         return [
             'first_name' => $this->nameRules(),
             'last_name' => $this->nameRules(),

@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
 class NavigationBuilder
@@ -44,13 +45,26 @@ class NavigationBuilder
     ];
 
     /**
+     * Routes a child login may see in the sidebar.
+     *
+     * @var list<string>
+     */
+    private const CHILD_ROUTES = ['player.dashboard', 'player.availability.edit', 'profile.edit'];
+
+    /**
      * @return list<array{title: string, href: string, icon: string}>
      */
     public function for(User $user): array
     {
         $items = [];
 
+        $restricted = Gate::forUser($user)->allows('child.restricted');
+
         foreach (self::ITEMS[$user->role->value] as [$title, $routeName, $icon]) {
+            if ($restricted && ! in_array($routeName, self::CHILD_ROUTES, true)) {
+                continue;
+            }
+
             if (Route::has($routeName)) {
                 $items[] = ['title' => $title, 'href' => route($routeName, absolute: false), 'icon' => $icon];
             }

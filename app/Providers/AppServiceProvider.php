@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\CancelUpcomingRsvps;
 use App\Models\PlayerProfile;
+use App\Models\User;
 use App\Policies\ChildProfilePolicy;
 use App\Services\NullCancelUpcomingRsvps;
 use App\Support\ContextResolver;
@@ -38,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
         $this->tagImpersonatedActivity();
 
         Gate::policy(PlayerProfile::class, ChildProfilePolicy::class);
+
+        Gate::define('child.restricted', fn (User $user): bool => $user->isPlayer() && $user->isChildAccount());
     }
 
     /**

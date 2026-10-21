@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,6 +31,7 @@ class ProfileController extends Controller
                 'photo_url' => $user->photoUrl(),
                 'email_verified' => $user->hasVerifiedEmail(),
             ],
+            'restricted' => Gate::forUser($user)->allows('child.restricted'),
             'roleProfile' => $updateProfile->roleProfileProps($user),
         ]);
     }
