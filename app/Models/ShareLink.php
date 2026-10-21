@@ -122,8 +122,8 @@ class ShareLink extends Model
     public function status(): string
     {
         return match (true) {
-            ! $this->is_active => self::STATUS_REVOKED,
             $this->isExhausted() => self::STATUS_ACCEPTED,
+            ! $this->is_active => self::STATUS_REVOKED,
             $this->isExpired() => self::STATUS_EXPIRED,
             default => self::STATUS_PENDING,
         };

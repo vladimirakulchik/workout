@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Trainer;
 
 use App\Actions\Trainer\CreateShareLink;
+use App\Actions\Trainer\InviteCoach;
 use App\Enums\ShareLinkType;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Trainer\StoreShareLinkRequest;
+use App\Http\Requests\Trainer\InviteCoachRequest;
 use App\Models\ShareLink;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,9 +39,9 @@ class ShareLinkController extends Controller
         ]);
     }
 
-    public function store(StoreShareLinkRequest $request, CreateShareLink $createShareLink): RedirectResponse
+    public function store(InviteCoachRequest $request, InviteCoach $inviteCoach): RedirectResponse
     {
-        $createShareLink->handle($request->user(), ShareLinkType::Coach, $request->validated());
+        $inviteCoach->handle($request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Coach invitation link created.')]);
 

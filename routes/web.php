@@ -15,6 +15,8 @@ Route::get('join/{code}', [JoinController::class, 'show'])->name('join.show');
 
 Route::post('join/{code}', [JoinController::class, 'register'])->middleware('guest')->name('join.register');
 
+Route::post('join/{code}/coach', [JoinController::class, 'registerCoach'])->middleware('guest')->name('join.register-coach');
+
 Route::middleware(['auth', 'verified', 'role:player', 'child.restricted'])->group(function () {
     Route::get('join/{code}/select', [JoinController::class, 'select'])->name('player.join.select');
     Route::post('join/{code}/select', [JoinController::class, 'associate'])->name('player.join.associate');
@@ -55,6 +57,11 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::post('share-links', [Trainer\ShareLinkController::class, 'store'])->name('share-links.store');
         Route::post('share-links/regenerate', [Trainer\ShareLinkController::class, 'regenerate'])->name('share-links.regenerate');
         Route::delete('share-links/{shareLink}', [Trainer\ShareLinkController::class, 'deactivate'])->name('share-links.deactivate');
+
+        Route::get('coaches', [Trainer\CoachController::class, 'index'])->name('coaches.index');
+        Route::post('coaches', [Trainer\CoachController::class, 'store'])->name('coaches.store');
+        Route::post('coaches/invitations/{shareLink}/resend', [Trainer\CoachController::class, 'resend'])->name('coaches.resend');
+        Route::delete('coaches/{coachProfile}', [Trainer\CoachController::class, 'destroy'])->name('coaches.destroy');
 
         Route::get('players', [Trainer\PlayerController::class, 'index'])->name('players.index');
         Route::get('players/availability-count', [Trainer\PlayerController::class, 'availabilityCount'])->name('players.availability-count');
