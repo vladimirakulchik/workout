@@ -24,6 +24,14 @@ class ChildProfilePolicy
         return $profile->is_child && $profile->parent_user_id === $user->id;
     }
 
+    /**
+     * Own profile, or a child profile the user is parent of.
+     */
+    public function manageAvailability(User $user, PlayerProfile $profile): bool
+    {
+        return $user->isPlayer() && ($profile->user_id === $user->id || $profile->parent_user_id === $user->id);
+    }
+
     public function delete(User $user, PlayerProfile $profile): bool
     {
         return $this->update($user, $profile);

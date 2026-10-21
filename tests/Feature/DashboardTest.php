@@ -87,19 +87,22 @@ class DashboardTest extends TestCase
 
         $this->actingAs($trainer)->get(route('trainer.dashboard'))
             ->assertInertia(fn (Assert $page) => $page
-                ->has('navigation', 2)
+                ->has('navigation', 3)
                 ->where('navigation.0.title', 'Dashboard')
                 ->where('navigation.0.href', route('trainer.dashboard', absolute: false))
-                ->where('navigation.1.title', 'Share Links')
-                ->where('navigation.1.href', route('trainer.share-links.index', absolute: false))
+                ->where('navigation.1.title', 'Players')
+                ->where('navigation.1.href', route('trainer.players.index', absolute: false))
+                ->where('navigation.2.title', 'Share Links')
+                ->where('navigation.2.href', route('trainer.share-links.index', absolute: false))
             );
 
         $coach = User::factory()->coach()->create();
 
         $this->actingAs($coach)->get(route('coach.dashboard'))
             ->assertInertia(fn (Assert $page) => $page
-                ->has('navigation', 2)
-                ->where('navigation.1.title', 'Profile')
+                ->has('navigation', 3)
+                ->where('navigation.1.title', 'My Times')
+                ->where('navigation.2.title', 'Profile')
             );
     }
 

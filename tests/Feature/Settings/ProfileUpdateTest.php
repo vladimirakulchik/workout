@@ -72,6 +72,8 @@ class ProfileUpdateTest extends TestCase
 
         $profile->refresh();
 
+        $this->assertSame('Pat', $profile->first_name);
+        $this->assertSame('Player', $profile->last_name);
         $this->assertSame('Central High', $profile->school);
         $this->assertSame('23', $profile->jersey_number);
         $this->assertSame('Mom', $profile->emergency_contact_name);

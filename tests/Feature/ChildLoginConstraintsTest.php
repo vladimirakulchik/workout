@@ -73,7 +73,7 @@ class ChildLoginConstraintsTest extends TestCase
             $this->actingAs($user)->get(route('player.dashboard'))->viewData('page')['props']['navigation'],
         )->pluck('title')->all();
 
-        $this->assertSame(['Dashboard', 'Profile'], $titles($this->child));
+        $this->assertSame(['Dashboard', 'Best Times', 'Profile'], $titles($this->child));
         $this->assertContains('Players / Family', $titles($this->parent));
     }
 
