@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\ContextResolver;
+use App\Support\CurrentContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped(ContextResolver::class);
+        $this->app->scoped(CurrentContext::class);
     }
 
     /**

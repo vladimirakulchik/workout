@@ -61,8 +61,10 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::get('dashboard', Coach\DashboardController::class)->name('dashboard');
     });
 
-    Route::middleware('role:player')->prefix('player')->name('player.')->group(function () {
+    Route::middleware(['role:player', 'player.context'])->prefix('player')->name('player.')->group(function () {
         Route::get('dashboard', Player\DashboardController::class)->name('dashboard');
+
+        Route::post('context', [Player\ContextController::class, 'update'])->name('context.update');
     });
 });
 

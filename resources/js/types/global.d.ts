@@ -1,5 +1,6 @@
 import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
+import type { PlayerContext } from '@/types/context';
 import type { ServerNavItem } from '@/types/navigation';
 
 // Extend ImportMeta interface for Vite...
@@ -21,6 +22,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             navigation: ServerNavItem[];
+            context: PlayerContext | null;
             branding: null;
             sidebarOpen: boolean;
             [key: string]: unknown;
