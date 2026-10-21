@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\ContextResolver;
 use App\Support\NavigationBuilder;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -49,8 +50,22 @@ class HandleInertiaRequests extends Middleware
                     : null,
             ],
             'navigation' => $user instanceof User ? (new NavigationBuilder)->for($user) : [],
+            'context' => $user instanceof User && $user->isPlayer() ? $this->contextProps($user, $request) : null,
             'branding' => null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * @return array{current: array<string, mixed>|null, options: array{yours: list<array<string, mixed>>, children: list<array<string, mixed>>}}
+     */
+    private function contextProps(User $user, Request $request): array
+    {
+        $resolver = app(ContextResolver::class);
+
+        return [
+            'current' => $resolver->resolve($user, $request->session()),
+            'options' => $resolver->options($user),
         ];
     }
 
