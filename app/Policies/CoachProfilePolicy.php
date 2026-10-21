@@ -14,6 +14,11 @@ class CoachProfilePolicy
         return $user->isTrainer();
     }
 
+    public function view(User $user, CoachProfile $coachProfile): bool
+    {
+        return $user->isTrainer() && $coachProfile->trainer_id === $user->id;
+    }
+
     public function remove(User $user, CoachProfile $coachProfile): bool
     {
         return $user->isTrainer() && $coachProfile->trainer_id === $user->id;

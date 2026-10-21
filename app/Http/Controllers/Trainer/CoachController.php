@@ -9,6 +9,7 @@ use App\Actions\Trainer\RemoveCoach;
 use App\Enums\ShareLinkType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Trainer\InviteCoachRequest;
+use App\Models\Availability;
 use App\Models\CoachProfile;
 use App\Models\ShareLink;
 use Illuminate\Http\RedirectResponse;
@@ -49,6 +50,31 @@ class CoachController extends Controller
                 'status' => $link->status(),
                 'expires_at' => $link->expires_at?->toIso8601String(),
                 'can_resend' => in_array($link->status(), [ShareLink::STATUS_PENDING, ShareLink::STATUS_EXPIRED], true),
+            ])->all(),
+        ]);
+    }
+
+    public function show(CoachProfile $coachProfile): Response
+    {
+        Gate::authorize('view', $coachProfile);
+
+        $coachProfile->load(['user', 'availabilities']);
+
+        return Inertia::render('trainer/Coaches/Show', [
+            'coach' => [
+                'id' => $coachProfile->id,
+                'name' => $coachProfile->user->name,
+                'email' => $coachProfile->user->email,
+                'bio' => $coachProfile->bio,
+                'credentials' => $coachProfile->credentials,
+                'certifications' => $coachProfile->certifications,
+                'is_public' => $coachProfile->is_public,
+                'joined_at' => $coachProfile->joined_at?->toIso8601String(),
+            ],
+            'ranges' => $coachProfile->availabilities->map(fn (Availability $range): array => [
+                'day_of_week' => $range->day_of_week,
+                'start_time' => $range->startHour(),
+                'end_time' => $range->endHour(),
             ])->all(),
         ]);
     }

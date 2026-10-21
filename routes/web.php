@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::get('coaches', [Trainer\CoachController::class, 'index'])->name('coaches.index');
         Route::post('coaches', [Trainer\CoachController::class, 'store'])->name('coaches.store');
         Route::post('coaches/invitations/{shareLink}/resend', [Trainer\CoachController::class, 'resend'])->name('coaches.resend');
+        Route::get('coaches/{coachProfile}', [Trainer\CoachController::class, 'show'])->name('coaches.show');
         Route::delete('coaches/{coachProfile}', [Trainer\CoachController::class, 'destroy'])->name('coaches.destroy');
 
         Route::get('players', [Trainer\PlayerController::class, 'index'])->name('players.index');

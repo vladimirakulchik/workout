@@ -209,7 +209,86 @@ class AvailabilityTest extends TestCase
 
         $this->actingAs($coach)
             ->get(route('coach.availability.edit'))
-            ->assertInertia(fn ($page) => $page->component('coach/Availability')->where('ranges.0.day_of_week', 5));
+            ->assertInertia(fn ($page) => $page->component('coach/MyTimes')->where('ranges.0.day_of_week', 5)->where('isPublic', false));
+    }
+
+    public function test_coach_keeps_multiple_slots_per_day_and_replaces_them(): void
+    {
+        $trainer = User::factory()->trainer()->create();
+        $coach = User::factory()->coach()->create();
+        $profile = CoachProfile::factory()->forTrainer($trainer)->public()->create(['user_id' => $coach->id]);
+
+        $this->actingAs($coach)
+            ->put(route('coach.availability.update'), ['ranges' => [
+                $this->range(2, '08:00', '10:00'),
+                $this->range(2, '17:00', '19:00'),
+            ]])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(2, $profile->availabilities()->where('day_of_week', 2)->count());
+
+        $this->actingAs($coach)
+            ->get(route('coach.availability.edit'))
+            ->assertInertia(fn ($page) => $page->where('isPublic', true)->has('ranges', 2));
+
+        $this->actingAs($coach)->put(route('coach.availability.update'), ['ranges' => []]);
+
+        $this->assertSame(0, $profile->availabilities()->count());
+    }
+
+    public function test_coach_cannot_change_another_coachs_availability(): void
+    {
+        $trainer = User::factory()->trainer()->create();
+        $coach = User::factory()->coach()->create();
+        $other = User::factory()->coach()->create();
+        CoachProfile::factory()->forTrainer($trainer)->create(['user_id' => $coach->id]);
+        $otherProfile = CoachProfile::factory()->forTrainer($trainer)->create(['user_id' => $other->id]);
+        $otherProfile->availabilities()->create($this->range(1, '09:00', '10:00'));
+
+        $this->actingAs($coach)
+            ->put(route('coach.availability.update'), ['ranges' => [$this->range(5, '17:00', '19:00')]]);
+
+        $this->assertSame(1, $otherProfile->availabilities()->count());
+        $this->assertSame(1, $otherProfile->availabilities()->where('day_of_week', 1)->count());
+    }
+
+    public function test_trainer_and_player_cannot_use_coach_times_pages(): void
+    {
+        $this->actingAs(User::factory()->trainer()->create())->get(route('coach.availability.edit'))->assertForbidden();
+        $this->actingAs(User::factory()->player()->create())->put(route('coach.availability.update'), ['ranges' => []])->assertForbidden();
+    }
+
+    public function test_trainer_views_own_coach_times_read_only(): void
+    {
+        $trainer = User::factory()->trainer()->create();
+        $profile = CoachProfile::factory()->forTrainer($trainer)->public()->create();
+        $profile->availabilities()->create($this->range(3, '18:00', '20:00'));
+
+        $this->actingAs($trainer)
+            ->get(route('trainer.coaches.show', $profile))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('trainer/Coaches/Show')
+                ->where('coach.is_public', true)
+                ->where('ranges.0.day_of_week', 3)
+                ->where('ranges.0.start_time', '18:00'));
+
+        $this->actingAs($trainer)
+            ->put(route('coach.availability.update'), ['ranges' => []])
+            ->assertForbidden();
+    }
+
+    public function test_trainer_cannot_view_another_trainers_coach(): void
+    {
+        $profile = CoachProfile::factory()->forTrainer(User::factory()->trainer()->create())->create();
+
+        $this->actingAs(User::factory()->trainer()->create())
+            ->get(route('trainer.coaches.show', $profile))
+            ->assertNotFound();
+
+        $this->actingAs(User::factory()->coach()->create())
+            ->get(route('trainer.coaches.show', $profile))
+            ->assertNotFound();
     }
 
     public function test_summary_formats_best_times(): void

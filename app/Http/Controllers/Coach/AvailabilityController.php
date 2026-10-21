@@ -20,7 +20,8 @@ class AvailabilityController extends Controller
     {
         $profile = $this->profile($request);
 
-        return Inertia::render('coach/Availability', [
+        return Inertia::render('coach/MyTimes', [
+            'isPublic' => $profile->is_public,
             'ranges' => $profile->availabilities->map(fn (Availability $range): array => [
                 'day_of_week' => $range->day_of_week,
                 'start_time' => $range->startHour(),
