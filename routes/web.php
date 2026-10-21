@@ -64,6 +64,10 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
     Route::middleware(['role:player', 'player.context'])->prefix('player')->name('player.')->group(function () {
         Route::get('dashboard', Player\DashboardController::class)->name('dashboard');
 
+        Route::resource('family', Player\ChildProfileController::class)
+            ->parameters(['family' => 'childProfile'])
+            ->except('show');
+
         Route::post('context', [Player\ContextController::class, 'update'])->name('context.update');
     });
 });
