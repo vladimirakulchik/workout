@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Player\StoreChildProfileRequest;
 use App\Http\Requests\Player\UpdateChildProfileRequest;
 use App\Models\PlayerProfile;
+use App\Models\TrainerPlayerAssociation;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class ChildProfileController extends Controller
         Gate::authorize('viewAny', PlayerProfile::class);
 
         $children = $request->user()->childProfiles()
-            ->with(['user', 'trainers'])
+            ->with(['user', 'trainerAssociations.trainer'])
             ->orderBy('first_name')
             ->get();
 
@@ -41,8 +42,18 @@ class ChildProfileController extends Controller
                 'photo_url' => $child->photoUrl(),
                 'has_login' => $child->user !== null,
                 'allow_token_spending' => $child->allow_token_spending,
-                'trainers' => $child->trainers->map(fn (User $trainer): string => $trainer->displayName())->values()->all(),
+                'trainers' => $child->trainerAssociations->map(fn (TrainerPlayerAssociation $association): array => [
+                    'id' => $association->trainer_id,
+                    'name' => $association->trainer->displayName(),
+                    'connected_at' => $association->connected_at->toDateString(),
+                ])->values()->all(),
             ])->all(),
+            'myTrainers' => User::query()
+                ->whereIn('id', $request->user()->connectedTrainerIds())
+                ->orderBy('first_name')
+                ->get()
+                ->map(fn (User $trainer): array => ['id' => $trainer->id, 'name' => $trainer->displayName()])
+                ->all(),
         ]);
     }
 

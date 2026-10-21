@@ -68,6 +68,9 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
             ->parameters(['family' => 'childProfile'])
             ->except('show');
 
+        Route::post('family/{childProfile}/trainers', [Player\ChildTrainerController::class, 'store'])->name('family.trainers.store');
+        Route::delete('family/{childProfile}/trainers/{trainer}', [Player\ChildTrainerController::class, 'destroy'])->name('family.trainers.destroy');
+
         Route::post('context', [Player\ContextController::class, 'update'])->name('context.update');
     });
 });

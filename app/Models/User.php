@@ -237,6 +237,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return TrainerPlayerAssociation::query()
             ->withoutGlobalScopes()
             ->whereIn('player_profile_id', $profileIds)
+            ->whereNull('deleted_at')
             ->distinct()
             ->pluck('trainer_id')
             ->map(fn ($id): int => (int) $id)

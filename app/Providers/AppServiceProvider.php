@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\CancelUpcomingRsvps;
 use App\Models\PlayerProfile;
 use App\Policies\ChildProfilePolicy;
+use App\Services\NullCancelUpcomingRsvps;
 use App\Support\ContextResolver;
 use App\Support\CurrentContext;
 use Carbon\CarbonImmutable;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->scoped(ContextResolver::class);
         $this->app->scoped(CurrentContext::class);
+        $this->app->bind(CancelUpcomingRsvps::class, NullCancelUpcomingRsvps::class);
     }
 
     /**

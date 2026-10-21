@@ -23,38 +23,9 @@ class AssociateWithTrainer
     public function handle(ShareLink $link, Collection $profiles): Collection
     {
         return DB::transaction(function () use ($link, $profiles): Collection {
-            $created = $profiles->filter(function (PlayerProfile $profile) use ($link): bool {
-                $association = TrainerPlayerAssociation::query()
-                    ->withoutGlobalScopes()
-                    ->withTrashed()
-                    ->where('trainer_id', $link->trainer_id)
-                    ->where('player_profile_id', $profile->id)
-                    ->first();
-
-                if ($association !== null && ! $association->trashed()) {
-                    return false;
-                }
-
-                $attributes = [
-                    'share_link_id' => $link->id,
-                    'connected_at' => now(),
-                    'status' => TrainerPlayerAssociation::STATUS_ACTIVE,
-                ];
-
-                if ($association === null) {
-                    TrainerPlayerAssociation::query()->withoutGlobalScopes()->create([
-                        'trainer_id' => $link->trainer_id,
-                        'player_profile_id' => $profile->id,
-                        ...$attributes,
-                    ]);
-                } else {
-                    $association->fill($attributes);
-                    $association->restore();
-                    $association->save();
-                }
-
-                return true;
-            })->values();
+            $created = $profiles
+                ->filter(fn (PlayerProfile $profile): bool => $this->connect($link->trainer_id, $profile, $link))
+                ->values();
 
             if ($created->isNotEmpty()) {
                 $link->increment('uses_count');
@@ -62,5 +33,44 @@ class AssociateWithTrainer
 
             return $created;
         });
+    }
+
+    /**
+     * Connect one profile to a trainer, restoring a previously removed association.
+     *
+     * @return bool False when the profile was already connected.
+     */
+    public function connect(int $trainerId, PlayerProfile $profile, ?ShareLink $link = null): bool
+    {
+        $association = TrainerPlayerAssociation::query()
+            ->withoutGlobalScopes()
+            ->withTrashed()
+            ->where('trainer_id', $trainerId)
+            ->where('player_profile_id', $profile->id)
+            ->first();
+
+        if ($association !== null && ! $association->trashed()) {
+            return false;
+        }
+
+        $attributes = [
+            'share_link_id' => $link?->id,
+            'connected_at' => now(),
+            'status' => TrainerPlayerAssociation::STATUS_ACTIVE,
+        ];
+
+        if ($association === null) {
+            TrainerPlayerAssociation::query()->withoutGlobalScopes()->create([
+                'trainer_id' => $trainerId,
+                'player_profile_id' => $profile->id,
+                ...$attributes,
+            ]);
+        } else {
+            $association->fill($attributes);
+            $association->restore();
+            $association->save();
+        }
+
+        return true;
     }
 }
