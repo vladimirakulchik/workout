@@ -9,6 +9,7 @@ use App\Actions\Player\RegisterPlayerViaShareLink;
 use App\Enums\ShareLinkType;
 use App\Http\Requests\JoinRegistrationRequest;
 use App\Http\Requests\JoinSelectionRequest;
+use App\Mail\ChildWantsToJoinMail;
 use App\Models\PlayerProfile;
 use App\Models\ShareLink;
 use App\Models\User;
@@ -16,6 +17,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -99,6 +103,10 @@ class JoinController extends Controller
             return redirect()->route('verification.notice');
         }
 
+        if (Gate::forUser($user)->allows('child.restricted')) {
+            return $this->blockChild($request, $link, $user);
+        }
+
         if ($user->childProfiles()->exists()) {
             return redirect()->route('player.join.select', ['code' => $link->code]);
         }
@@ -110,6 +118,28 @@ class JoinController extends Controller
         }
 
         return $this->finish($request, $link, $associate->handle($link, collect([$profile])), $profile);
+    }
+
+    /**
+     * A child login cannot join: tell them to ask their parent and notify the parent (once an hour per child and link).
+     */
+    private function blockChild(Request $request, ShareLink $link, User $child): Response
+    {
+        $profile = $child->selfPlayerProfile;
+        $parent = $profile?->parent;
+        $trainer = $link->trainer;
+
+        if ($profile !== null && $parent !== null) {
+            RateLimiter::attempt(
+                "child-join:{$child->id}:{$link->id}",
+                1,
+                fn () => Mail::to($parent)->send(new ChildWantsToJoinMail($parent, $profile, $trainer, $link)),
+                3600,
+            );
+        }
+
+        return Inertia::render('player/JoinBlocked', ['trainerName' => $trainer->displayName()])
+            ->toResponse($request);
     }
 
     /**
