@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Concerns\HasAvailabilities;
 use Database\Factories\PlayerProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +41,7 @@ use Illuminate\Support\Facades\Storage;
 class PlayerProfile extends Model
 {
     /** @use HasFactory<PlayerProfileFactory> */
-    use HasFactory;
+    use HasAvailabilities, HasFactory;
 
     /**
      * @return array<string, string>
@@ -61,6 +63,19 @@ class PlayerProfile extends Model
     protected function age(): Attribute
     {
         return Attribute::get(fn (): ?int => $this->birth_date?->age);
+    }
+
+    /**
+     * Profiles with one availability range on `$day` that fully covers `$from`-`$to` (`HH:MM`).
+     *
+     * @param  Builder<PlayerProfile>  $query
+     */
+    public function scopeAvailableDuring(Builder $query, int $day, string $from, string $to): void
+    {
+        $query->whereHas('availabilities', fn (Builder $range) => $range
+            ->where('day_of_week', $day)
+            ->where('start_time', '<=', $from.':00')
+            ->where('end_time', '>=', $to.':00'));
     }
 
     /**

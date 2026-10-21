@@ -71,6 +71,8 @@ class UpdateUserProfile
     {
         match ($user->role) {
             UserRole::Player => $user->selfPlayerProfile?->update([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
                 'school' => $validated['school'] ?? null,
                 'jersey_number' => $validated['jersey_number'] ?? null,
                 'emergency_contact_name' => $validated['emergency_contact_name'],

@@ -55,14 +55,23 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::post('share-links', [Trainer\ShareLinkController::class, 'store'])->name('share-links.store');
         Route::post('share-links/regenerate', [Trainer\ShareLinkController::class, 'regenerate'])->name('share-links.regenerate');
         Route::delete('share-links/{shareLink}', [Trainer\ShareLinkController::class, 'deactivate'])->name('share-links.deactivate');
+
+        Route::get('players', [Trainer\PlayerController::class, 'index'])->name('players.index');
+        Route::get('players/availability-count', [Trainer\PlayerController::class, 'availabilityCount'])->name('players.availability-count');
     });
 
     Route::middleware('role:coach')->prefix('coach')->name('coach.')->group(function () {
         Route::get('dashboard', Coach\DashboardController::class)->name('dashboard');
+
+        Route::get('availability', [Coach\AvailabilityController::class, 'edit'])->name('availability.edit');
+        Route::put('availability', [Coach\AvailabilityController::class, 'update'])->name('availability.update');
     });
 
     Route::middleware(['role:player', 'player.context'])->prefix('player')->name('player.')->group(function () {
         Route::get('dashboard', Player\DashboardController::class)->name('dashboard');
+
+        Route::get('availability', [Player\AvailabilityController::class, 'edit'])->name('availability.edit');
+        Route::put('availability', [Player\AvailabilityController::class, 'update'])->name('availability.update');
 
         Route::middleware('child.restricted')->group(function () {
             Route::resource('family', Player\ChildProfileController::class)

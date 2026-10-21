@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Concerns\BelongsToTrainer;
+use App\Concerns\HasAvailabilities;
 use Database\Factories\CoachProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
 class CoachProfile extends Model
 {
     /** @use HasFactory<CoachProfileFactory> */
-    use BelongsToTrainer, HasFactory;
+    use BelongsToTrainer, HasAvailabilities, HasFactory;
 
     /**
      * @return array<string, string>
