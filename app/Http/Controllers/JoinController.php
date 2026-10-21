@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\Coach\AcceptCoachInvitation;
 use App\Actions\Player\AssociateWithTrainer;
 use App\Actions\Player\RegisterPlayerViaShareLink;
 use App\Enums\ShareLinkType;
+use App\Exceptions\CoachInvitationException;
+use App\Http\Requests\JoinCoachRegistrationRequest;
 use App\Http\Requests\JoinRegistrationRequest;
 use App\Http\Requests\JoinSelectionRequest;
 use App\Mail\ChildWantsToJoinMail;
@@ -33,7 +36,7 @@ class JoinController extends Controller
         ShareLink::STATUS_EXPIRED => 'This link has expired. Please ask your trainer for a new one.',
     ];
 
-    public function show(Request $request, string $code, AssociateWithTrainer $associate): Response
+    public function show(Request $request, string $code, AssociateWithTrainer $associate, AcceptCoachInvitation $acceptCoach): Response
     {
         $link = ShareLink::findByCode($code);
 
@@ -46,7 +49,19 @@ class JoinController extends Controller
         $user = $request->user();
 
         if ($user instanceof User) {
-            return $this->joinAsAuthenticated($request, $link, $user, $associate);
+            return $link->type === ShareLinkType::Coach
+                ? $this->joinCoachAsAuthenticated($request, $link, $user, $acceptCoach)
+                : $this->joinAsAuthenticated($request, $link, $user, $associate);
+        }
+
+        if ($link->type === ShareLinkType::Coach && ! User::query()->where('email', $link->target_email)->exists()) {
+            return Inertia::render('auth/JoinCoachRegister', [
+                'trainerName' => $link->trainer->displayName(),
+                'code' => $link->code,
+                'email' => $link->target_email,
+                'name' => $link->name,
+                'passwordRules' => Password::defaults()->toPasswordRulesString(),
+            ])->toResponse($request);
         }
 
         if ($link->type === ShareLinkType::Player) {
@@ -87,6 +102,54 @@ class JoinController extends Controller
         ]);
 
         return redirect()->route('verification.notice');
+    }
+
+    public function registerCoach(JoinCoachRegistrationRequest $request, string $code, AcceptCoachInvitation $acceptCoach): RedirectResponse|Response
+    {
+        $link = ShareLink::findByCode($code);
+
+        if ($link === null || ! $link->isUsable()) {
+            return $this->invalid($request, $link);
+        }
+
+        if ($link->type !== ShareLinkType::Coach) {
+            return $this->invalid($request, $link, __('This link is for players and cannot be used to register a coach.'), 403);
+        }
+
+        try {
+            $user = $acceptCoach->handle($link, null, $request->validated());
+        } catch (CoachInvitationException $exception) {
+            throw ValidationException::withMessages(['password' => $exception->getMessage()]);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('join_code');
+
+        return redirect()->route('verification.notice');
+    }
+
+    private function joinCoachAsAuthenticated(Request $request, ShareLink $link, User $user, AcceptCoachInvitation $acceptCoach): Response|RedirectResponse
+    {
+        if (! $user->isCoach()) {
+            return $this->invalid($request, $link, __('You are signed in with a :role account. Log out to use this link.', ['role' => strtolower($user->role->label())]), 403);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
+        try {
+            $acceptCoach->handle($link, $user);
+        } catch (CoachInvitationException $exception) {
+            return $this->invalid($request, $link, $exception->getMessage(), 403);
+        }
+
+        $request->session()->forget('join_code');
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('You are now a coach for :trainer.', ['trainer' => $link->trainer->displayName()])]);
+
+        return redirect()->route('coach.dashboard');
     }
 
     private function joinAsAuthenticated(Request $request, ShareLink $link, User $user, AssociateWithTrainer $associate): Response

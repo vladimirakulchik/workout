@@ -23,7 +23,7 @@ class LoginResponse implements LoginResponseContract
 
         $joinCode = $request->session()->get('join_code');
 
-        if ($joinCode !== null && $request->user()?->isPlayer()) {
+        if ($joinCode !== null && ($request->user()?->isPlayer() || $request->user()?->isCoach())) {
             return redirect()->route('join.show', ['code' => $joinCode]);
         }
 
