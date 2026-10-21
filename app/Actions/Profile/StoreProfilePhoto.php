@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Profile;
 
+use App\Models\PlayerProfile;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -22,10 +23,10 @@ class StoreProfilePhoto
      * Store a resized photo and thumbnail for the user and remove the previous ones.
      * Returns the path of the 400px image; the thumbnail sits next to it with a `_thumb` suffix.
      */
-    public function handle(User $user, UploadedFile $photo): string
+    public function handle(User|PlayerProfile $user, UploadedFile $photo): string
     {
         $disk = Storage::disk(self::DISK);
-        $directory = 'photos/'.$user->id;
+        $directory = ($user instanceof PlayerProfile ? 'photos/profiles/' : 'photos/').$user->id;
         $name = Str::uuid()->toString();
         $path = "{$directory}/{$name}.webp";
 

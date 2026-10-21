@@ -224,6 +224,27 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Ids of the trainers this login or any of its child profiles is connected to.
+     *
+     * @return array<int, int>
+     */
+    public function connectedTrainerIds(): array
+    {
+        $profileIds = PlayerProfile::query()
+            ->where(fn ($query) => $query->where('user_id', $this->id)->orWhere('parent_user_id', $this->id))
+            ->pluck('id');
+
+        return TrainerPlayerAssociation::query()
+            ->withoutGlobalScopes()
+            ->whereIn('player_profile_id', $profileIds)
+            ->distinct()
+            ->pluck('trainer_id')
+            ->map(fn ($id): int => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
      * Coach logins attached to this trainer.
      *
      * @return HasManyThrough<User, CoachProfile, $this>

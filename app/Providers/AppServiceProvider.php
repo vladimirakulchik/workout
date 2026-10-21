@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\PlayerProfile;
+use App\Policies\ChildProfilePolicy;
 use App\Support\ContextResolver;
 use App\Support\CurrentContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Lab404\Impersonate\Services\ImpersonateManager;
@@ -30,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->tagImpersonatedActivity();
+
+        Gate::policy(PlayerProfile::class, ChildProfilePolicy::class);
     }
 
     /**

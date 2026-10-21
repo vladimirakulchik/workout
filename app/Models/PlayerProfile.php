@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -60,6 +61,16 @@ class PlayerProfile extends Model
     protected function age(): Attribute
     {
         return Attribute::get(fn (): ?int => $this->birth_date?->age);
+    }
+
+    /**
+     * Public URL of the profile photo, or the default avatar when none is set.
+     */
+    public function photoUrl(): string
+    {
+        return $this->photo_path !== null
+            ? Storage::disk('public')->url($this->photo_path)
+            : asset('images/default-avatar.svg');
     }
 
     /**
