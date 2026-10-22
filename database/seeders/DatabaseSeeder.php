@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\UserRole;
+use App\Models\ChildPurchaseApproval;
 use App\Models\CoachProfile;
 use App\Models\PlayerProfile;
 use App\Models\TrainerProfile;
@@ -64,6 +65,8 @@ class DatabaseSeeder extends Seeder
 
         $parent = User::factory()->player()->create();
         PlayerProfile::factory()->self($parent)->create();
-        PlayerProfile::factory()->child($parent)->count(2)->create();
+        $children = PlayerProfile::factory()->child($parent)->count(2)->create();
+
+        ChildPurchaseApproval::factory()->forChild($children->first())->forTrainer($trainers->first())->create();
     }
 }

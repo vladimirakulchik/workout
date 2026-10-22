@@ -2,6 +2,7 @@ import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
 import type { PlayerContext } from '@/types/context';
 import type { ServerNavItem } from '@/types/navigation';
+import type { NotificationsProps } from '@/types/notifications';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -23,6 +24,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             navigation: ServerNavItem[];
             context: PlayerContext | null;
+            notifications: NotificationsProps | null;
             branding: null;
             sidebarOpen: boolean;
             [key: string]: unknown;

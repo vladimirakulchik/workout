@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\ContextResolver;
 use App\Support\NavigationBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -51,6 +52,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'navigation' => $user instanceof User ? (new NavigationBuilder)->for($user) : [],
             'context' => $user instanceof User && $user->isPlayer() ? $this->contextProps($user, $request) : null,
+            'notifications' => $user instanceof User ? $this->notificationProps($user) : null,
             'branding' => null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -66,6 +68,23 @@ class HandleInertiaRequests extends Middleware
         return [
             'current' => $resolver->resolve($user, $request->session()),
             'options' => $resolver->options($user),
+        ];
+    }
+
+    /**
+     * @return array{unread_count: int, recent: list<array{id: string, message: string, url: string|null, read: bool, created_at: string}>}
+     */
+    private function notificationProps(User $user): array
+    {
+        return [
+            'unread_count' => $user->unreadNotifications()->count(),
+            'recent' => array_values($user->notifications()->limit(10)->get()->map(fn (DatabaseNotification $notification): array => [
+                'id' => $notification->id,
+                'message' => (string) ($notification->data['message'] ?? ''),
+                'url' => is_string($notification->data['url'] ?? null) ? $notification->data['url'] : null,
+                'read' => $notification->read_at !== null,
+                'created_at' => $notification->created_at->toIso8601String(),
+            ])->all()),
         ];
     }
 
