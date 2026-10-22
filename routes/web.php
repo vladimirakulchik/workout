@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
-Route::get('join/{code}', [JoinController::class, 'show'])->name('join.show');
+Route::middleware('throttle:join')->group(function () {
+    Route::get('join/{code}', [JoinController::class, 'show'])->name('join.show');
 
-Route::post('join/{code}', [JoinController::class, 'register'])->middleware('guest')->name('join.register');
+    Route::post('join/{code}', [JoinController::class, 'register'])->middleware('guest')->name('join.register');
 
-Route::post('join/{code}/coach', [JoinController::class, 'registerCoach'])->middleware('guest')->name('join.register-coach');
+    Route::post('join/{code}/coach', [JoinController::class, 'registerCoach'])->middleware('guest')->name('join.register-coach');
+});
 
 Route::middleware(['auth', 'verified', 'role:player', 'child.restricted'])->group(function () {
     Route::get('join/{code}/select', [JoinController::class, 'select'])->name('player.join.select');

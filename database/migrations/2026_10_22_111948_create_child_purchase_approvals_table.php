@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('child_purchase_approvals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('player_profile_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('player_profile_id')->index()->constrained()->cascadeOnDelete();
             $table->foreignId('parent_user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('trainer_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('trainer_id')->index()->constrained('users')->cascadeOnDelete();
             $table->nullableMorphs('subject');
             $table->string('description');
             $table->unsignedInteger('amount_cents');

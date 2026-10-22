@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('coach_availability_overrides', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('event_id')->index();
-            $table->foreignId('coach_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('overridden_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('coach_id')->index()->constrained('users')->cascadeOnDelete();
+            $table->foreignId('overridden_by')->index()->constrained('users')->cascadeOnDelete();
             $table->text('reason');
             $table->timestamps();
         });

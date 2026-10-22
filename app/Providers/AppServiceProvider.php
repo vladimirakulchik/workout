@@ -12,9 +12,13 @@ use App\Services\NullWriteCoachToEvent;
 use App\Support\ContextResolver;
 use App\Support\CurrentContext;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Lab404\Impersonate\Services\ImpersonateManager;
@@ -41,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->tagImpersonatedActivity();
 
+        RateLimiter::for('join', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));
+
         Gate::policy(PlayerProfile::class, ChildProfilePolicy::class);
 
         Gate::define('child.restricted', fn (User $user): bool => $user->isPlayer() && $user->isChildAccount());
@@ -66,6 +72,8 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        Model::preventLazyLoading(! app()->isProduction());
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
