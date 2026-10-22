@@ -71,6 +71,10 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::post('coach-assignments/check', [Trainer\CoachAssignmentController::class, 'check'])->name('coach-assignments.check');
         Route::post('coach-assignments', [Trainer\CoachAssignmentController::class, 'store'])->name('coach-assignments.store');
 
+        Route::get('branding', [Trainer\BrandingController::class, 'edit'])->name('branding.edit');
+        Route::post('branding', [Trainer\BrandingController::class, 'update'])->name('branding.update');
+        Route::delete('branding', [Trainer\BrandingController::class, 'destroy'])->name('branding.destroy');
+
         Route::get('players', [Trainer\PlayerController::class, 'index'])->name('players.index');
         Route::get('players/availability-count', [Trainer\PlayerController::class, 'availabilityCount'])->name('players.availability-count');
     });

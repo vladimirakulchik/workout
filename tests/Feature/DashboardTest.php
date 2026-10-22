@@ -87,7 +87,7 @@ class DashboardTest extends TestCase
 
         $this->actingAs($trainer)->get(route('trainer.dashboard'))
             ->assertInertia(fn (Assert $page) => $page
-                ->has('navigation', 4)
+                ->has('navigation', 5)
                 ->where('navigation.0.title', 'Dashboard')
                 ->where('navigation.0.href', route('trainer.dashboard', absolute: false))
                 ->where('navigation.1.title', 'Players')
@@ -126,7 +126,7 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->missing('auth.user.password')
                 ->missing('auth.user.remember_token')
-                ->where('branding', null)
+                ->where('branding', ['logo_url' => null, 'color' => null])
             );
     }
 }

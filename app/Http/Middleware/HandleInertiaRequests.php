@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\BrandingResolver;
 use App\Support\ContextResolver;
 use App\Support\NavigationBuilder;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ class HandleInertiaRequests extends Middleware
             'navigation' => $user instanceof User ? (new NavigationBuilder)->for($user) : [],
             'context' => $user instanceof User && $user->isPlayer() ? $this->contextProps($user, $request) : null,
             'notifications' => $user instanceof User ? $this->notificationProps($user) : null,
-            'branding' => null,
+            'branding' => $user instanceof User ? app(BrandingResolver::class)->resolve($user, $request->session()) : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
