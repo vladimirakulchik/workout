@@ -64,6 +64,9 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::get('coaches/{coachProfile}', [Trainer\CoachController::class, 'show'])->name('coaches.show');
         Route::delete('coaches/{coachProfile}', [Trainer\CoachController::class, 'destroy'])->name('coaches.destroy');
 
+        Route::post('coach-assignments/check', [Trainer\CoachAssignmentController::class, 'check'])->name('coach-assignments.check');
+        Route::post('coach-assignments', [Trainer\CoachAssignmentController::class, 'store'])->name('coach-assignments.store');
+
         Route::get('players', [Trainer\PlayerController::class, 'index'])->name('players.index');
         Route::get('players/availability-count', [Trainer\PlayerController::class, 'availabilityCount'])->name('players.availability-count');
     });
