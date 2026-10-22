@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import CoachAssignmentDialog from '@/components/CoachAssignmentDialog.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { index } from '@/routes/trainer/coaches';
 import type { AvailabilityRange } from '@/types';
 
@@ -16,6 +21,13 @@ const props = defineProps<{
         joined_at: string | null;
     };
     ranges: AvailabilityRange[];
+    overrides: {
+        id: number;
+        event_id: number;
+        overridden_by: string;
+        reason: string;
+        created_at: string | null;
+    }[];
 }>();
 
 defineOptions({
@@ -40,6 +52,13 @@ function formatTime(time: string): string {
     const display = hour % 12 === 0 ? 12 : hour % 12;
 
     return `${display}:${String(minute).padStart(2, '0')} ${suffix}`;
+}
+
+const assignOpen = ref(false);
+const assignment = ref({ eventId: '', start: '', end: '' });
+
+function formatDateTime(value: string | null): string {
+    return value === null ? '-' : new Date(value).toLocaleString();
 }
 
 function rangesFor(day: number): string[] {
@@ -103,6 +122,68 @@ function rangesFor(day: number): string[] {
                                 </template>
                                 <span v-else class="text-muted-foreground">Not available</span>
                             </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="grid max-w-4xl gap-3" aria-labelledby="assign-heading">
+            <h2 id="assign-heading" class="text-lg font-medium">Assign to event</h2>
+            <p class="text-sm text-muted-foreground">
+                The event picker arrives with the events epic; until then enter the event id and time window by hand.
+            </p>
+            <form class="grid gap-3 sm:grid-cols-4 sm:items-end" @submit.prevent="assignOpen = true">
+                <div class="grid gap-2">
+                    <Label for="assign-event">Event id</Label>
+                    <Input id="assign-event" v-model="assignment.eventId" type="number" min="1" required data-test="assign-event-id" />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="assign-start">Start</Label>
+                    <Input id="assign-start" v-model="assignment.start" type="datetime-local" required data-test="assign-start" />
+                </div>
+                <div class="grid gap-2">
+                    <Label for="assign-end">End</Label>
+                    <Input id="assign-end" v-model="assignment.end" type="datetime-local" required data-test="assign-end" />
+                </div>
+                <Button type="submit" data-test="open-assignment">Assign coach</Button>
+            </form>
+            <CoachAssignmentDialog
+                v-model:open="assignOpen"
+                :coach-profile-id="coach.id"
+                :coach-name="coach.name"
+                :event-id="Number(assignment.eventId)"
+                :start="assignment.start"
+                :end="assignment.end"
+            />
+        </section>
+
+        <section class="grid max-w-4xl gap-3" aria-labelledby="overrides-heading" data-test="coach-overrides">
+            <h2 id="overrides-heading" class="text-lg font-medium">Availability overrides</h2>
+            <div class="overflow-x-auto rounded-lg border">
+                <table class="w-full text-left text-sm">
+                    <caption class="sr-only">
+                        Times {{ coach.name }} was assigned outside their availability
+                    </caption>
+                    <thead class="border-b bg-muted/40">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 font-medium">Event</th>
+                            <th scope="col" class="px-4 py-3 font-medium">Overridden by</th>
+                            <th scope="col" class="px-4 py-3 font-medium">Reason</th>
+                            <th scope="col" class="px-4 py-3 font-medium">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-if="overrides.length === 0">
+                            <td colspan="4" class="px-4 py-8 text-center text-muted-foreground" data-test="no-overrides">
+                                No overrides yet.
+                            </td>
+                        </tr>
+                        <tr v-for="override in overrides" :key="override.id" class="border-b last:border-0" data-test="override-row">
+                            <td class="px-4 py-3">#{{ override.event_id }}</td>
+                            <td class="px-4 py-3">{{ override.overridden_by }}</td>
+                            <td class="px-4 py-3">{{ override.reason }}</td>
+                            <td class="px-4 py-3">{{ formatDateTime(override.created_at) }}</td>
                         </tr>
                     </tbody>
                 </table>

@@ -10,6 +10,7 @@ use App\Enums\ShareLinkType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Trainer\InviteCoachRequest;
 use App\Models\Availability;
+use App\Models\CoachAvailabilityOverride;
 use App\Models\CoachProfile;
 use App\Models\ShareLink;
 use Illuminate\Http\RedirectResponse;
@@ -76,6 +77,19 @@ class CoachController extends Controller
                 'start_time' => $range->startHour(),
                 'end_time' => $range->endHour(),
             ])->all(),
+            'overrides' => CoachAvailabilityOverride::query()
+                ->where('coach_id', $coachProfile->user_id)
+                ->with('overriddenBy')
+                ->latest('id')
+                ->limit(100)
+                ->get()
+                ->map(fn (CoachAvailabilityOverride $override): array => [
+                    'id' => $override->id,
+                    'event_id' => $override->event_id,
+                    'overridden_by' => $override->overriddenBy->name,
+                    'reason' => $override->reason,
+                    'created_at' => $override->created_at?->toIso8601String(),
+                ])->all(),
         ]);
     }
 
