@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\Coach;
 use App\Http\Controllers\JoinController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Player;
 use App\Http\Controllers\Trainer;
 use App\Support\NavigationBuilder;
@@ -34,6 +35,9 @@ Route::delete('impersonate/leave', [Admin\ImpersonationController::class, 'leave
 Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
     Route::get('dashboard', fn () => redirect()->route(NavigationBuilder::dashboardRoute(auth()->user()->role)))
         ->name('dashboard');
+
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
 
     Route::middleware('role:super_admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('dashboard', Admin\DashboardController::class)->name('dashboard');
@@ -84,7 +88,14 @@ Route::middleware(['auth', 'verified', 'password.change'])->group(function () {
         Route::get('availability', [Player\AvailabilityController::class, 'edit'])->name('availability.edit');
         Route::put('availability', [Player\AvailabilityController::class, 'update'])->name('availability.update');
 
+        Route::get('approvals', [Player\ApprovalController::class, 'index'])->name('approvals.index');
+        Route::post('purchases/request', Player\PurchaseRequestController::class)->name('purchases.request');
+
         Route::middleware('child.restricted')->group(function () {
+            Route::post('approvals/{childPurchaseApproval}/approve', [Player\ApprovalController::class, 'approve'])->name('approvals.approve');
+            Route::post('approvals/{childPurchaseApproval}/deny', [Player\ApprovalController::class, 'deny'])->name('approvals.deny');
+            Route::post('approvals/{childPurchaseApproval}/request-info', [Player\ApprovalController::class, 'requestInfo'])->name('approvals.request-info');
+
             Route::resource('family', Player\ChildProfileController::class)
                 ->parameters(['family' => 'childProfile'])
                 ->except('show');

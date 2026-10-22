@@ -49,7 +49,7 @@ class NavigationBuilder
      *
      * @var list<string>
      */
-    private const CHILD_ROUTES = ['player.dashboard', 'player.availability.edit', 'profile.edit'];
+    private const CHILD_ROUTES = ['player.dashboard', 'player.availability.edit', 'player.approvals.index', 'profile.edit'];
 
     /**
      * @return list<array{title: string, href: string, icon: string}>
