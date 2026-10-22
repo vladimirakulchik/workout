@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('original_user_id')->index();
             $table->string('original_email');
-            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->index()->constrained('users')->nullOnDelete();
             $table->text('reason');
             $table->text('original_data');
             $table->timestamp('deleted_at');

@@ -26,6 +26,9 @@ return new class extends Migration
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+            $table->index('created_at');
+            $table->index(['last_name', 'first_name']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

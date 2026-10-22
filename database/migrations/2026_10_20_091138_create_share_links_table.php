@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('code', 32)->unique();
             $table->string('type', 10);
             $table->foreignId('trainer_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('created_by')->index()->constrained('users');
             $table->string('target_email')->nullable();
             $table->string('name')->nullable();
             $table->text('message')->nullable();

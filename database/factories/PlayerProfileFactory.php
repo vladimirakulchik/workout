@@ -23,8 +23,8 @@ class PlayerProfileFactory extends Factory
         return [
             'user_id' => User::factory()->player(),
             'parent_user_id' => null,
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
+            'first_name' => fn (array $attributes): string => $this->loginName($attributes, 'first_name', fake()->firstName()),
+            'last_name' => fn (array $attributes): string => $this->loginName($attributes, 'last_name', fake()->lastName()),
             'birth_date' => fake()->dateTimeBetween('-40 years', '-19 years'),
             'gender' => fake()->randomElement(['male', 'female', 'other']),
             'skill_level' => null,
@@ -36,6 +36,22 @@ class PlayerProfileFactory extends Factory
             'emergency_contact_phone' => fake()->phoneNumber(),
             'allow_token_spending' => false,
         ];
+    }
+
+    /**
+     * A profile with a login always shares the login's name; a child without a login gets its own.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function loginName(array $attributes, string $column, string $fallback): string
+    {
+        $userId = $attributes['user_id'] ?? null;
+
+        if ($userId === null) {
+            return $fallback;
+        }
+
+        return (string) User::query()->findOrFail((int) $userId)->{$column};
     }
 
     /**

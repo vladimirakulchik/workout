@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('trainer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('player_profile_id')->index()->constrained()->cascadeOnDelete();
-            $table->foreignId('share_link_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('share_link_id')->nullable()->index()->constrained()->nullOnDelete();
             $table->timestamp('connected_at');
             $table->string('status', 10)->default('active');
             $table->softDeletes();
