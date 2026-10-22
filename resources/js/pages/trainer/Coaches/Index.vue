@@ -60,12 +60,19 @@ function resend(invitation: InvitationRow): void {
     router.post(CoachController.resend.url(invitation.id), {}, options);
 }
 
-function remove(coach: CoachRow): void {
-    if (!window.confirm(`Remove ${coach.name} from your team? Their history is kept.`)) {
+const coachPendingRemoval = ref<CoachRow | null>(null);
+
+function confirmRemove(): void {
+    const coach = coachPendingRemoval.value;
+
+    if (coach === null) {
         return;
     }
 
-    router.delete(CoachController.destroy.url(coach.id), options);
+    router.delete(CoachController.destroy.url(coach.id), {
+        ...options,
+        onSuccess: () => (coachPendingRemoval.value = null),
+    });
 }
 
 function statusVariant(status: InvitationRow['status']): 'default' | 'secondary' | 'destructive' {
@@ -162,7 +169,8 @@ function formatDate(value: string | null): string {
                                     size="sm"
                                     :disabled="processing"
                                     :aria-label="`Remove ${coach.name}`"
-                                    @click="remove(coach)"
+                                    data-test="remove-coach"
+                                    @click="coachPendingRemoval = coach"
                                 >
                                     Remove
                                 </Button>
@@ -226,5 +234,22 @@ function formatDate(value: string | null): string {
                 </table>
             </div>
         </section>
+
+        <Dialog :open="coachPendingRemoval !== null" @update:open="(open: boolean) => !open && (coachPendingRemoval = null)">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Remove coach</DialogTitle>
+                    <DialogDescription>
+                        Remove {{ coachPendingRemoval?.name }} from your team? Their history is kept.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button type="button" variant="outline" @click="coachPendingRemoval = null">Cancel</Button>
+                    <Button type="button" variant="destructive" :disabled="processing" data-test="confirm-remove-coach" @click="confirmRemove">
+                        Remove
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

@@ -1,5 +1,6 @@
 import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
+import type { Branding } from '@/types/branding';
 import type { PlayerContext } from '@/types/context';
 import type { ServerNavItem } from '@/types/navigation';
 import type { NotificationsProps } from '@/types/notifications';
@@ -25,7 +26,7 @@ declare module '@inertiajs/core' {
             navigation: ServerNavItem[];
             context: PlayerContext | null;
             notifications: NotificationsProps | null;
-            branding: null;
+            branding: Branding | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };
